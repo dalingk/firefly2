@@ -67,7 +67,7 @@ void FastLedManager::SetLed(uint8_t led_index, const CRGB &rgb) {
   if (device.GetLedCount() == 1 && led_index == 0) {
     leds[0] = rgb;
   }
-  leds[led_index + 1] = rgb;
+  leds[led_index + START_LED_IDX] = rgb;
 }
 
 void FastLedManager::SetOnboardLed(const CRGB &rgb) { leds[0] = rgb; }
