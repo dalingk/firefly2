@@ -4,14 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/**
- * Framing primitives for the serial bridge (see src/arduino/SerialRadio.hpp).
- *
- * These are pure byte math with no Arduino dependency, so they live here and
- * are covered by SerialRadioCodecTest on the host. A defect in any of them
- * corrupts mesh traffic silently rather than failing loudly, which is exactly
- * why they are tested away from the hardware.
- */
+// This file implements COBS and CRC 16. COBS is a framing technique to make a
+// stream of bytes self-synchronizing by the usage of an 0x00 sentinel byte as a
+// delimiter. CRC16 is a method to verify the integrity of transmitted data.
+// https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing
 namespace serial_codec {
 
 // COBS adds one overhead byte per 254 bytes of input, plus one leading code
@@ -30,7 +26,7 @@ constexpr size_t MaxEncodedLength(size_t decoded_length) {
  * a receiver that starts mid-frame, or drops bytes, recovers at the next
  * delimiter.
  */
-size_t CobsEncode(const uint8_t *in, size_t len, uint8_t *out);
+size_t CobsEncode(const uint8_t* in, size_t len, uint8_t* out);
 
 /**
  * Standard COBS decoder. Decodes `len` encoded bytes from `in` into `out`,
@@ -38,7 +34,7 @@ size_t CobsEncode(const uint8_t *in, size_t len, uint8_t *out);
  * at most len - 1 bytes). Returns the decoded length, or 0 if the frame is
  * malformed.
  */
-size_t CobsDecode(const uint8_t *in, size_t len, uint8_t *out);
+size_t CobsDecode(const uint8_t* in, size_t len, uint8_t* out);
 
 /**
  * CRC-16/CCITT-FALSE. Its residue is 0, so running it over a decoded body
@@ -46,7 +42,7 @@ size_t CobsDecode(const uint8_t *in, size_t len, uint8_t *out);
  * intact. The serial bridge relies on this to reject line noise that COBS
  * would otherwise decode into a plausible-looking packet.
  */
-uint16_t Crc16(const uint8_t *in, size_t len);
+uint16_t Crc16(const uint8_t* in, size_t len);
 
 }  // namespace serial_codec
 

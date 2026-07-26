@@ -28,8 +28,8 @@ static constexpr uint32_t kSerialBaud = 115200;
 SerialRadio* serial_radio = new SerialRadio(Serial1);
 #endif
 
-FireflyNetworkManager nm(esp_radio);
-RadioStateMachine state_machine(&nm);
+FireflyNetworkManager network_manager(esp_radio);
+RadioStateMachine state_machine(&network_manager);
 FastLedManager* led_manager;
 
 void setup() {
@@ -44,7 +44,7 @@ void setup() {
   if (!serial_radio->Begin()) {
     led_manager->FatalErrorAnimation();
   }
-  nm.addRadio(serial_radio);
+  network_manager.addRadio(serial_radio);
 #endif
 
   led_manager->PlayStartupAnimation();

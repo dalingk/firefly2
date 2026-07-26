@@ -5,6 +5,8 @@
 #include <functional>
 #include <numeric>
 
+constexpr size_t kStartLEDIndex = START_LED_IDX;
+
 FastLedManager::FastLedManager(const DeviceDescription &device,
                                RadioStateMachine *radio_state)
     : LedManager(device, radio_state), led_count_(device.GetLedCount()) {
@@ -65,7 +67,7 @@ void FastLedManager::SetLed(uint8_t led_index, const CRGB &rgb) {
   if (led_count_ == 1 && led_index == 0) {
     leds[0] = rgb;
   }
-  leds[led_index + START_LED_IDX] = rgb;
+  leds[led_index + kStartLEDIndex] = rgb;
 }
 
 void FastLedManager::SetOnboardLed(const CRGB &rgb) { leds[0] = rgb; }
