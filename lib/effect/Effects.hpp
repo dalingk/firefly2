@@ -9,6 +9,8 @@
 #include "DisplayColorPaletteEffect.hpp"
 #include "FireEffect.hpp"
 #include "FireflyEffect.hpp"
+#include "HalloweenAlternatingEffect.hpp"
+#include "HalloweenCandyCornEffect.hpp"
 #include "LightningEffect.hpp"
 #include "MitxelaPiercing.hpp"
 #include "PoliceEffect.hpp"

@@ -43,17 +43,17 @@ TEST(SimulatorCatalogTest, EffectRegistryPreservesOrderWeightsAndWireTable) {
     uint8_t weight;
     uint16_t parameter;
   } expected[] = {
-      {"Color Cycle", 2, 0},
-      {"Contrast Bumps", 2, 0},
-      {"Fire", 1, 0},
-      {"Firefly", 2, 0},
-      {"Lightning", 1, 0},
-      {"Pride", 1, 0},
-      {"Rainbow Bumps", 4, 0},
-      {"Rainbow", 4, 0},
-      {"Rorschach", 2, 0},
-      {"Spark", 4, 0},
-      {"Swinging Lights", 4, 0},
+      {"Color Cycle", 0, 0},
+      {"Contrast Bumps", 0, 0},
+      {"Fire", 0, 0},
+      {"Firefly", 0, 0},
+      {"Lightning", 0, 0},
+      {"Pride", 0, 0},
+      {"Rainbow Bumps", 0, 0},
+      {"Rainbow", 0, 0},
+      {"Rorschach", 0, 0},
+      {"Spark", 0, 0},
+      {"Swinging Lights", 0, 0},
       {"Swinging Lights (Police)", 0, 0},
       {"Stop Light", 0, 0},
       {"Simple Blink 60ms", 0, 60},
@@ -61,6 +61,8 @@ TEST(SimulatorCatalogTest, EffectRegistryPreservesOrderWeightsAndWireTable) {
       {"Simple Blink 12ms", 0, 12},
       {"Simple Blink 300ms", 0, 300},
       {"Mitxela Piercing", 0, 0},
+      {"Halloween Alternating", 1, 0},
+      {"Halloween Candy Corn", 1, 0},
       {"Display Color Palette", 0, 0},
       {"Dark", 0, 0},
   };
@@ -75,9 +77,9 @@ TEST(SimulatorCatalogTest, EffectRegistryPreservesOrderWeightsAndWireTable) {
   }
 
   const auto &wire_table = EffectRegistry::WireTable();
-  ASSERT_EQ(wire_table.size(), 36u);
+  ASSERT_EQ(wire_table.size(), 22u);
   EXPECT_LT(wire_table.size(), 256u);
-  EXPECT_EQ(EffectRegistry::RandomEffectCount(), 27u);
+  EXPECT_EQ(EffectRegistry::RandomEffectCount(), 2u);
 
   size_t wire_index = 0;
   for (const auto &declaration : declarations) {
@@ -95,26 +97,25 @@ TEST(SimulatorCatalogTest, EffectRegistryPreservesOrderWeightsAndWireTable) {
   EXPECT_STREQ(wire_table.back()->name, "Dark");
 }
 
-TEST(SimulatorCatalogTest, EffectFactoriesHonorExplicitSimulatorOffsets) {
-  EffectSeedOverrides seeds;
-  seeds.fire_offset = 6198;
-  seeds.firefly_offset = 423;
-  seeds.rorschach_offset = 24359;
-
+TEST(SimulatorCatalogTest, EffectFactoriesCreateActiveHalloweenEffects) {
   const auto &declarations = EffectRegistry::Declarations();
-  std::unique_ptr<Effect> fire(
-      EffectRegistry::CreateEffect(declarations[2], &seeds));
-  std::unique_ptr<Effect> firefly(
-      EffectRegistry::CreateEffect(declarations[3], &seeds));
-  std::unique_ptr<Effect> rorschach(
-      EffectRegistry::CreateEffect(declarations[8], &seeds));
+  std::unique_ptr<Effect> alternating(
+      EffectRegistry::CreateEffect(declarations[18]));
+  std::unique_ptr<Effect> candy_corn(
+      EffectRegistry::CreateEffect(declarations[19]));
 
-  ASSERT_NE(fire, nullptr);
-  ASSERT_NE(firefly, nullptr);
-  ASSERT_NE(rorschach, nullptr);
-  ExpectSameRendering(*fire, FireEffect(seeds.fire_offset));
-  ExpectSameRendering(*firefly, FireflyEffect(seeds.firefly_offset));
-  ExpectSameRendering(*rorschach, RorschachEffect(seeds.rorschach_offset));
+  ASSERT_NE(alternating, nullptr);
+  ASSERT_NE(candy_corn, nullptr);
+
+  const StripDescription strip(17, {Circular, Mirrored});
+  RadioPacket packet;
+  packet.writeSetEffect(0, 0, 8);
+  const CRGB alternating_color = alternating->GetRGB(0, 0, strip, &packet);
+  const CRGB candy_corn_color = candy_corn->GetRGB(0, 0, strip, &packet);
+  EXPECT_NE(alternating_color.r + alternating_color.g + alternating_color.b,
+            0u);
+  EXPECT_NE(candy_corn_color.r + candy_corn_color.g + candy_corn_color.b,
+            0u);
 }
 
 TEST(SimulatorCatalogTest, PaletteNamesAndColorsShareOneOrderedCatalog) {

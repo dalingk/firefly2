@@ -26,6 +26,8 @@ enum class EffectKind : uint8_t {
   SwingingLights,
   StopLight,
   SimpleBlink,
+  HalloweenAlternating,
+  HalloweenCandyCorn,
   DisplayColorPalette,
   Dark,
 };

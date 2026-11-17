@@ -24,7 +24,9 @@ const std::vector<EffectDeclaration> &Declarations() {
       {"Simple Blink 30ms", 0, 30, EffectKind::SimpleBlink},
       {"Simple Blink 12ms", 0, 12, EffectKind::SimpleBlink},
       {"Simple Blink 300ms", 0, 300, EffectKind::SimpleBlink},
-      {"Mitxela Piercing", 1, 0, EffectKind::MitxelaPiercing},
+      {"Mitxela Piercing", 0, 0, EffectKind::MitxelaPiercing},
+      {"Halloween Alternating", 1, 0, EffectKind::HalloweenAlternating},
+      {"Halloween Candy Corn", 0, 0, EffectKind::HalloweenCandyCorn},
       {"Display Color Palette", 0, 0, EffectKind::DisplayColorPalette},
       {"Dark", 0, 0, EffectKind::Dark},
   };
@@ -96,6 +98,10 @@ Effect *CreateEffect(const EffectDeclaration &declaration,
       return new StopLightEffect();
     case EffectKind::SimpleBlink:
       return new SimpleBlinkEffect(declaration.parameter);
+    case EffectKind::HalloweenAlternating:
+      return new HalloweenAlternatingEffect();
+    case EffectKind::HalloweenCandyCorn:
+      return new HalloweenCandyCornEffect();
     case EffectKind::DisplayColorPalette:
       return new DisplayColorPaletteEffect();
     case EffectKind::Dark:

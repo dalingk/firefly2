@@ -5,6 +5,7 @@
 
 #include "FakeLedManager.hpp"
 #include "FakeRadio.hpp"
+#include "HalloweenAlternatingEffect.hpp"
 #include "gtest/gtest.h"
 
 class EffectsTest : public ::testing::Test {
@@ -144,4 +145,64 @@ TEST_F(EffectsTest, paletteByReferenceKeepsOutputIdentical) {
     EXPECT_EQ(c.expected.g, rgb.g) << "led " << (int)c.led;
     EXPECT_EQ(c.expected.b, rgb.b) << "led " << (int)c.led;
   }
+}
+
+TEST(HalloweenAlternatingEffectTest, BandsMoveAndTinyStripsShareOneColor) {
+  HalloweenAlternatingEffect effect;
+  RadioPacket packet;
+  const auto same_rgb = [](const CRGB& lhs, const CRGB& rhs) {
+    return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b;
+  };
+  StripDescription fifty_led_strip(50, {});
+  const CRGB first_band = effect.GetRGB(0, 0, fifty_led_strip, &packet);
+  const CRGB second_band = effect.GetRGB(5, 0, fifty_led_strip, &packet);
+  EXPECT_FALSE(same_rgb(first_band, second_band));
+  EXPECT_TRUE(
+      same_rgb(first_band, effect.GetRGB(10, 0, fifty_led_strip, &packet)));
+
+  const CRGB full_brightness = CHSV(HUE_PURPLE, 255, 255);
+  const CRGB three_quarter_brightness = CHSV(HUE_PURPLE, 255, 191);
+  const CRGB nine_sixteenths_brightness = CHSV(HUE_PURPLE, 255, 143);
+  const CRGB twenty_one_sixty_fourths_brightness = CHSV(HUE_PURPLE, 255, 107);
+  const CRGB interpolated_tail_brightness = CHSV(HUE_PURPLE, 255, 53);
+  const CRGB full_orange = CHSV(HUE_ORANGE, 255, 255);
+  const CRGB three_quarter_orange = CHSV(HUE_ORANGE, 255, 191);
+  EXPECT_TRUE(same_rgb(full_brightness, first_band));
+  EXPECT_TRUE(same_rgb(full_orange, second_band));
+  EXPECT_TRUE(same_rgb(three_quarter_brightness,
+                       effect.GetRGB(1, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(nine_sixteenths_brightness,
+                       effect.GetRGB(2, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(twenty_one_sixty_fourths_brightness,
+                       effect.GetRGB(3, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(CHSV(HUE_PURPLE, 255, 106),
+                       effect.GetRGB(3, 1, fifty_led_strip, &packet)));
+  EXPECT_TRUE(
+      same_rgb(CRGB::Black, effect.GetRGB(4, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(interpolated_tail_brightness,
+                       effect.GetRGB(3, 128, fifty_led_strip, &packet)));
+  const CRGB edge_blend = blend(CHSV(HUE_PURPLE, 255, 0),
+                                CHSV(HUE_ORANGE, 255, 255), 128, SHORTEST_HUES);
+  EXPECT_TRUE(
+      same_rgb(edge_blend, effect.GetRGB(4, 128, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(three_quarter_orange,
+                       effect.GetRGB(6, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(same_rgb(effect.GetRGB(0, 256, fifty_led_strip, &packet),
+                       effect.GetRGB(1, 0, fifty_led_strip, &packet)));
+  EXPECT_TRUE(
+      same_rgb(second_band, effect.GetRGB(0, 1280, fifty_led_strip, &packet)));
+
+  StripDescription strip(48, {});
+
+  const CRGB purple_band = effect.GetRGB(12, 0, strip, &packet);
+  const CRGB moving_transition = effect.GetRGB(12, 1728, strip, &packet);
+  EXPECT_FALSE(same_rgb(purple_band, moving_transition));
+  EXPECT_FALSE(same_rgb(purple_band, effect.GetRGB(36, 0, strip, &packet)));
+
+  StripDescription long_strip(255, {});
+  EXPECT_TRUE(same_rgb(CRGB::Black, effect.GetRGB(20, 0, long_strip, &packet)));
+
+  StripDescription tiny_strip(10, {Tiny});
+  EXPECT_TRUE(same_rgb(effect.GetRGB(0, 1234, tiny_strip, &packet),
+                       effect.GetRGB(9, 1234, tiny_strip, &packet)));
 }
